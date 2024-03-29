@@ -2,7 +2,10 @@ import yt_dlp
 import tkinter as tk
 import sys
 import os
+import threading
 from tkinter import ttk
+
+downloading = False
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -23,6 +26,7 @@ def DLVideo():
     if mp3check is True:
         print(resource_path("ffmpeg\\ffmpeg.exe"))
         
+        opts["progress_hooks"] = [SetProgressBar]
         opts["format"] = 'mp3/bestaudio/best'
         opts["postprocessors"] = [{
             'key': "FFmpegExtractAudio",
@@ -34,24 +38,59 @@ def DLVideo():
         print("No URL!")
         return
     
+    global downloading
+    if downloading:
+        print("Already downloading!")
+    
     with yt_dlp.YoutubeDL(opts) as ydl:
+        downloading = True
+        dlbutton.config(text="Downloading...")
+        pbar.pack()
+        pbar.update()
+        dlbutton.update()
         ydl.download(selectedUrl)
+        dlbutton.config(text="Download")
+        downloading = False
+        pbar.pack_forget()
+
+def StartDLVidThread():
+    thread = threading.Thread(target=DLVideo)
+    thread.start()
+
+def SetProgressBar(prog):
+    if prog["status"] == "downloading":
+        newstep = round( round( ( float(prog["downloaded_bytes"]) / float(prog["total_bytes_estimate"]) ) * 100 , 1 ) )
+        print(newstep)
+        pbarvar.set(newstep)
+        pbar.update()
+    elif prog["status"] == "finished":
+        pbarvar.set(0)
 
 window = tk.Tk()
 window.title("Merc's Simple Vid Downloader")
-window.geometry("400x100")
+window.geometry("400x200")
+window.configure(bg="#242322")
 
-hlo = ttk.Label(text="Video URL")
-hlo.pack()
+Style = ttk.Style()
+Style.configure('custom.TCheckbutton', background="gray", font=('Bahnschrift'))
+Style.configure('custom.TButton', background="green", font=('Bahnschrift'))
 
-entry = tk.Entry(width=300)
+hlo = ttk.Label(text="Paste video URL below", font="Bahnschrift", background="gray")
+hlo.pack(pady=10)
+hlo.configure(borderwidth=8)
+
+entry = tk.Entry(width=50)
 entry.pack()
+entry.configure(bg="gray")
 
-asmp3 = ttk.Checkbutton(text="Download MP3 only")
+asmp3 = ttk.Checkbutton(text="Download MP3 only", style="custom.TCheckbutton")
 asmp3.state(["!alternate"])
-asmp3.pack()
+asmp3.pack(pady=10)
 
-dlbutton = ttk.Button(text="Download", command=DLVideo)
-dlbutton.pack()
+dlbutton = ttk.Button(text="Download", command=StartDLVidThread, style="custom.TButton")
+dlbutton.pack(pady=10)
+
+pbarvar = tk.IntVar()
+pbar = ttk.Progressbar(variable=pbarvar)
 
 window.mainloop()
