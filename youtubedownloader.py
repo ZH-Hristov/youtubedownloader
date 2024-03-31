@@ -66,6 +66,19 @@ def SetProgressBar(prog):
     elif prog["status"] == "finished":
         pbarvar.set(0)
 
+def DoPopup(event):
+    try:
+        rmenu.tk_popup(event.x_root, event.y_root)
+    finally:
+        rmenu.grab_release()
+
+def ClearEntry():
+    entry.delete(0, tk.END)
+
+def PasteEntry():
+    entry.delete(0, tk.END)
+    entry.insert(0, window.clipboard_get())
+
 window = tk.Tk()
 window.title("Merc's Simple Vid Downloader")
 window.geometry("400x200")
@@ -82,6 +95,12 @@ hlo.configure(borderwidth=8)
 entry = tk.Entry(width=50)
 entry.pack()
 entry.configure(bg="gray")
+entry.bind("<Button-3>", DoPopup)
+
+rmenu = tk.Menu(entry, tearoff=0)
+rmenu.add_command(label="Paste", command=PasteEntry)
+rmenu.add_separator()
+rmenu.add_command(label="Clear", command=ClearEntry)
 
 asmp3 = ttk.Checkbutton(text="Download MP3 only", style="custom.TCheckbutton")
 asmp3.state(["!alternate"])
