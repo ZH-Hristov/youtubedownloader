@@ -59,7 +59,8 @@ def StartDLVidThread():
 
 def SetProgressBar(prog):
     if prog["status"] == "downloading":
-        newstep = round( round( ( float(prog["downloaded_bytes"]) / float(prog["total_bytes_estimate"]) ) * 100 , 1 ) )
+        print(prog)
+        newstep = round( round( ( float(prog["downloaded_bytes"]) / float(prog["total_bytes"]) ) * 100 , 1 ) )
         print(newstep)
         pbarvar.set(newstep)
         pbar.update()
